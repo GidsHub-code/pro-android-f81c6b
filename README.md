@@ -6,8 +6,7 @@ bar, tab switcher, or browser chrome of any kind.
 
 ## What builds automatically
 
-- **Debug APK + AAB**: always generated for quick device testing and Play Console internal testing tracks.
-- **Signed release APK + AAB**: generated when release signing secrets are configured.
+- **Signed release APK + AAB**: generated on every push to `main`. The workflow fails if the release signing secrets are not configured (see below) — debug builds are no longer produced.
 
 Artifacts are uploaded under the GitHub Actions run → **Artifacts** section.
 
