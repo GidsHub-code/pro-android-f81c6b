@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> fileChooserLauncher;
     private PermissionRequest pendingWebPermissionRequest;
 
-    private static final String START_URL = "https://tanstack-start-app.nnadigideon20.workers.dev";
-    private static final String HOST = "tanstack-start-app.nnadigideon20.workers.dev";
+    private static final String START_URL = "https://signalme-125808783895.europe-west2.run.app";
+    private static final String HOST = "signalme-125808783895.europe-west2.run.app";
     private static final int REQ_PERMISSIONS = 4242;
 
     @SuppressLint("SetJavaScriptEnabled")
