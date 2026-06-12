@@ -149,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
             }, new android.content.IntentFilter("FCM_TOKEN"));
 
         refresh.setOnRefreshListener(() -> webView.reload());
+        refresh.setOnChildScrollUpCallback((parent, child) -> webView.getScrollY() > 0);
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState);
         } else {
