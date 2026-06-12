@@ -22,9 +22,9 @@ android {
         versionCode 6
         versionName "2.6"
 
-        manifestPlaceholders = [
-            hostName: "tanstack-start-app.nnadigideon20.workers.dev",
-            defaultUrl: "https://tanstack-start-app.nnadigideon20.workers.dev"
+       manifestPlaceholders = [
+            hostName: "signalme-125808783895.europe-west2.run.app",
+            defaultUrl: "https://signalme-125808783895.europe-west2.run.app"
         ]
     }
 
