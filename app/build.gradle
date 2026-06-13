@@ -19,12 +19,12 @@ android {
         applicationId "signalme.pro"
         minSdk 23
         targetSdk 35
-        versionCode 6
-        versionName "2.6"
+        versionCode 7
+        versionName "2.7"
 
-       manifestPlaceholders = [
+        manifestPlaceholders = [
             hostName: "signalme-125808783895.europe-west2.run.app",
-            defaultUrl: "https://signalme-125808783895.europe-west2.run.app"
+            defaultUrl: "https://signalme-125808783895.europe-west2.run.app/"
         ]
     }
 
@@ -71,7 +71,7 @@ configurations.all {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.webkit:webkit:1.12.1'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    // swiperefreshlayout removed — pull-to-refresh disabled
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     implementation 'androidx.core:core:1.13.1'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'

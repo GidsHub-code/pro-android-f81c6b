@@ -23,16 +23,16 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+// SwipeRefreshLayout removed — pull-to-refresh disabled by request.
 
 public class MainActivity extends AppCompatActivity {
     private WebView webView;
-    private SwipeRefreshLayout refresh;
+    // refresh layout removed
     private ValueCallback<Uri[]> fileChooserCallback;
     private ActivityResultLauncher<Intent> fileChooserLauncher;
     private PermissionRequest pendingWebPermissionRequest;
 
-    private static final String START_URL = "https://signalme-125808783895.europe-west2.run.app";
+    private static final String START_URL = "https://signalme-125808783895.europe-west2.run.app/";
     private static final String HOST = "signalme-125808783895.europe-west2.run.app";
     private static final int REQ_PERMISSIONS = 4242;
 
@@ -56,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
             decor.setSystemUiVisibility(flags);
         } catch (Throwable ignored) {}
         setContentView(R.layout.activity_main);
-        refresh = findViewById(R.id.refresh);
         webView = findViewById(R.id.webview);
 
         createNotificationChannel();
@@ -67,8 +66,8 @@ public class MainActivity extends AppCompatActivity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setDatabaseEnabled(true);
-        s.setLoadWithOverviewMode(false);
-        s.setUseWideViewPort(false);
+        s.setLoadWithOverviewMode(true);
+        s.setUseWideViewPort(true);
         s.setSupportZoom(false);
         s.setBuiltInZoomControls(false);
         s.setAllowFileAccess(true);
@@ -121,10 +120,16 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
             @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) { refresh.setRefreshing(true); }
+            public void onPageStarted(WebView view, String url, Bitmap favicon) { }
             @Override
             public void onPageFinished(WebView view, String url) {
-                refresh.setRefreshing(false);
+                // Inject responsive viewport meta if site is missing one (helps non-mobile-optimised pages)
+                String viewportJs = "(function(){try{var m=document.querySelector('meta[name=viewport]');"
+                    + "if(!m){m=document.createElement('meta');m.name='viewport';"
+                    + "m.content='width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover';"
+                    + "document.head.appendChild(m);} document.documentElement.style.overscrollBehavior='none';"
+                    + "document.body && (document.body.style.overscrollBehavior='none');}catch(e){}})();";
+                view.evaluateJavascript(viewportJs, null);
                 String saved = getSharedPreferences("fcm", MODE_PRIVATE).getString("token", null);
                 if (saved != null) {
                     String js = "window.__FCM_TOKEN__ = '" + saved + "';"
@@ -148,8 +153,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }, new android.content.IntentFilter("FCM_TOKEN"));
 
-        refresh.setOnRefreshListener(() -> webView.reload());
-        refresh.setOnChildScrollUpCallback((parent, child) -> webView.getScrollY() > 0);
+        // pull-to-refresh disabled by request
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState);
         } else {
