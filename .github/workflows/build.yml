@@ -51,6 +51,40 @@ jobs:
           fi
           echo "google-services.json written ($(wc -c < app/google-services.json) bytes) — Firebase plugin will activate."
 
+      - name: Validate FCM server key (FCM_SERVICE_ACCOUNT_JSON) — never bundled into the app
+        env:
+          FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+        run: |
+          # SECURITY: FCM_SERVICE_ACCOUNT_JSON is a Google service-account PRIVATE key.
+          # It is used by your *backend* (e.g. signalme.pro) to SEND pushes via the
+          # FCM HTTP v1 API. It must NEVER be embedded inside the APK/AAB — anyone
+          # could extract it and impersonate your backend. This step only validates
+          # it and then deletes it from the runner.
+          if [ -z "$FCM_SERVICE_ACCOUNT_JSON" ]; then
+            echo "FCM_SERVICE_ACCOUNT_JSON not set — fine for the app build."
+            echo "Add it to your push-sending backend instead (signalme.pro)."
+          else
+            TMP_SA="$RUNNER_TEMP/fcm-service-account.json"
+            if printf '%s' "$FCM_SERVICE_ACCOUNT_JSON" | head -c 1 | grep -q '{'; then
+              printf '%s' "$FCM_SERVICE_ACCOUNT_JSON" > "$TMP_SA"
+            else
+              printf '%s' "$FCM_SERVICE_ACCOUNT_JSON" | base64 --decode > "$TMP_SA"
+            fi
+            python3 - "$TMP_SA" <<'PY'
+          import json, sys
+          with open(sys.argv[1]) as f: sa = json.load(f)
+          required = ["type","project_id","private_key","client_email","token_uri"]
+          missing = [k for k in required if k not in sa]
+          if missing:
+              print("::error::FCM_SERVICE_ACCOUNT_JSON missing keys: " + ", ".join(missing)); sys.exit(1)
+          if sa.get("type") != "service_account":
+              print("::error::FCM_SERVICE_ACCOUNT_JSON is not a service_account key"); sys.exit(1)
+          print("FCM service account OK — project_id=" + sa["project_id"])
+          PY
+            shred -u "$TMP_SA" 2>/dev/null || rm -f "$TMP_SA"
+            echo "Validated. Key was NOT bundled into the APK/AAB."
+          fi
+
       - name: Build signed release APK and AAB
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}

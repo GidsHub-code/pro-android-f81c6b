@@ -33,14 +33,79 @@ Upload the signed `.aab` to Google Play Console.
 
 ## Enable push notifications (Firebase Cloud Messaging)
 
-The app already ships with the FCM SDK, a notification channel, and a `PushService`
-that forwards the device token into the WebView (as `window.__FCM_TOKEN__`). To
-actually receive pushes, the build needs a `google-services.json` from your Firebase project.
+The app ships with the FCM SDK, a notification channel, and `PushService`. There
+are **two distinct secrets** for FCM — they live in different places and do
+different jobs:
 
-1. In the [Firebase console](https://console.firebase.google.com), create a project and add an Android app using the **applicationId** from `app/build.gradle` (the package id, e.g. `app.git2app.mysite`).
-2. Download the generated `google-services.json`.
-3. Add it as a GitHub Actions secret named `GOOGLE_SERVICES_JSON` (raw JSON contents — base64 is also accepted):
-   - Repo → Settings → Secrets and variables → Actions → New repository secret.
-4. Re-run the workflow. The build step writes `app/google-services.json` before Gradle runs, which activates the `com.google.gms.google-services` plugin and bakes the FCM credentials into the APK/AAB.
+| Secret | Lives in | Used by | Bundled into APK? |
+| --- | --- | --- | --- |
+| `GOOGLE_SERVICES_JSON` | GitHub repo secrets (this repo) | Android build — registers the device with Firebase | **Yes**, written to `app/google-services.json` |
+| `FCM_SERVICE_ACCOUNT_JSON` | Your push-sending **backend** (e.g. signalme.pro) | Server code that calls the FCM HTTP v1 API to send pushes | **No — never** (it's a private key) |
 
-Without this secret, the build still succeeds but FCM is inert — notifications won't arrive.
+### 1. Add `GOOGLE_SERVICES_JSON` (required to receive)
+1. In the [Firebase console](https://console.firebase.google.com) add an Android app using your `applicationId` (e.g. `signalme.pro`).
+2. Download `google-services.json`.
+3. GitHub → repo → Settings → Secrets and variables → Actions → New secret named `GOOGLE_SERVICES_JSON` (raw JSON or base64).
+
+### 2. Add `FCM_SERVICE_ACCOUNT_JSON` to your backend (required to send)
+1. Firebase console → Project settings → **Service accounts** → **Generate new private key**.
+2. Store the downloaded JSON as an env var / secret on signalme.pro — **not** in the Android repo. (You may also keep a copy in GitHub Actions secrets so the workflow can *validate* it; it will never be packaged into the APK.)
+3. From your backend, exchange it for a short-lived OAuth token and POST to FCM v1:
+
+   ```ts
+   // Node 18+ on your signalme.pro backend
+   import { GoogleAuth } from "google-auth-library";
+   const auth = new GoogleAuth({
+     credentials: JSON.parse(process.env.FCM_SERVICE_ACCOUNT_JSON!),
+     scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
+   });
+   const projectId = JSON.parse(process.env.FCM_SERVICE_ACCOUNT_JSON!).project_id;
+
+   export async function sendPush(deviceToken: string, payload: {
+     title: string; body: string; url?: string; notification_id?: string;
+   }) {
+     const client = await auth.getClient();
+     const token = (await client.getAccessToken()).token;
+     const res = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+       method: "POST",
+       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+       body: JSON.stringify({
+         message: {
+           token: deviceToken,
+           // data-only → delivers even when the app is killed; PushService draws the notification
+           data: {
+             title: payload.title,
+             body: payload.body,
+             url: payload.url ?? "",
+             notification_id: payload.notification_id ?? "",
+           },
+           android: { priority: "HIGH" },
+         },
+       }),
+     });
+     if (!res.ok) throw new Error(`FCM ${res.status}: ${await res.text()}`);
+   }
+   ```
+
+### 3. Receive the device token from inside your web app
+The Android wrapper injects the FCM token straight into the WebView. From any page
+served by the app you can do:
+
+```html
+<script>
+  window.onFcmToken = function (token) {
+    // POST it to your backend so you can target this device later
+    fetch("/api/push/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, platform: "android" }),
+    });
+  };
+  // Token may already be set if the page loaded after the service got it:
+  if (window.__FCM_TOKEN__) window.onFcmToken(window.__FCM_TOKEN__);
+</script>
+```
+
+That's the full loop — chat messages and match signals sent from signalme.pro
+will land in the system tray (and, when the app is open, reach the page via
+`onMessage` if you also wire `firebase/messaging` web SDK).
