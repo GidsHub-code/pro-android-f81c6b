@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> fileChooserLauncher;
     private PermissionRequest pendingWebPermissionRequest;
 
-    private static final String START_URL = "https://signalme-125808783895.europe-west2.run.app/";
-    private static final String HOST = "signalme-125808783895.europe-west2.run.app";
+    private static final String START_URL = "https://signalmep2-abaad358.nnadigideon20.workers.dev/";
+    private static final String HOST = "signalmep2-abaad358.nnadigideon20.workers.dev";
     private static final int REQ_PERMISSIONS = 4242;
 
     @SuppressLint("SetJavaScriptEnabled")
