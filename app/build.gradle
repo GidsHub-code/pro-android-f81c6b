@@ -19,12 +19,12 @@ android {
         applicationId "signalme.pro"
         minSdk 23
         targetSdk 35
-        versionCode 7
-        versionName "2.7"
+        versionCode 8
+        versionName "2.8"
 
         manifestPlaceholders = [
-            hostName: "signalme-125808783895.europe-west2.run.app",
-            defaultUrl: "https://signalme-125808783895.europe-west2.run.app/"
+            hostName: "signalmep2-abaad358.nnadigideon20.workers.dev",
+            defaultUrl: "https://signalmep2-abaad358.nnadigideon20.workers.dev/"
         ]
     }
 
