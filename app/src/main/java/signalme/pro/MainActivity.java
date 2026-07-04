@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> fileChooserLauncher;
     private PermissionRequest pendingWebPermissionRequest;
 
-    private static final String START_URL = "https://signalmep2-abaad358.nnadigideon20.workers.dev/";
-    private static final String HOST = "signalmep2-abaad358.nnadigideon20.workers.dev";
+    private static final String START_URL = "https://signalme-125808783895.europe-west2.run.app/";
+    private static final String HOST = "signalme-125808783895.europe-west2.run.app";
     private static final int REQ_PERMISSIONS = 4242;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -57,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
         } catch (Throwable ignored) {}
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webview);
+        // Kill pull-to-refresh / overscroll glow so scrolling never triggers a reload.
+        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        try { webView.setNestedScrollingEnabled(false); } catch (Throwable ignored) {}
 
         createNotificationChannel();
         requestRuntimePermissions();
@@ -123,12 +126,16 @@ public class MainActivity extends AppCompatActivity {
             public void onPageStarted(WebView view, String url, Bitmap favicon) { }
             @Override
             public void onPageFinished(WebView view, String url) {
-                // Inject responsive viewport meta if site is missing one (helps non-mobile-optimised pages)
-                String viewportJs = "(function(){try{var m=document.querySelector('meta[name=viewport]');"
-                    + "if(!m){m=document.createElement('meta');m.name='viewport';"
-                    + "m.content='width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover';"
-                    + "document.head.appendChild(m);} document.documentElement.style.overscrollBehavior='none';"
-                    + "document.body && (document.body.style.overscrollBehavior='none');}catch(e){}})();";
+                // Force a mobile-friendly viewport + prevent horizontal stretch on tablets/foldables.
+                String viewportJs = "(function(){try{"
+                    + "var m=document.querySelector('meta[name=viewport]');"
+                    + "if(!m){m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);} "
+                    + "m.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover');"
+                    + "var s=document.getElementById('__git2app_fix');"
+                    + "if(!s){s=document.createElement('style');s.id='__git2app_fix';"
+                    + "s.innerHTML='html,body{max-width:100vw!important;overflow-x:hidden!important;overscroll-behavior:none!important;overscroll-behavior-y:none!important;-webkit-text-size-adjust:100%!important;}img,video,iframe,table{max-width:100%!important;height:auto!important;}';"
+                    + "document.head.appendChild(s);} "
+                    + "}catch(e){}})();";
                 view.evaluateJavascript(viewportJs, null);
                 String saved = getSharedPreferences("fcm", MODE_PRIVATE).getString("token", null);
                 if (saved != null) {
