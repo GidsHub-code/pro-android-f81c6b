@@ -23,17 +23,17 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-// SwipeRefreshLayout removed — pull-to-refresh disabled by request.
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class MainActivity extends AppCompatActivity {
     private WebView webView;
-    // refresh layout removed
+    private SwipeRefreshLayout refreshLayout;
     private ValueCallback<Uri[]> fileChooserCallback;
     private ActivityResultLauncher<Intent> fileChooserLauncher;
     private PermissionRequest pendingWebPermissionRequest;
 
-    private static final String START_URL = "https://signalmep2-abaad358.nnadigideon20.workers.dev/";
-    private static final String HOST = "signalmep2-abaad358.nnadigideon20.workers.dev";
+    private static final String START_URL = "https://signalme-125808783895.europe-west2.run.app/";
+    private static final String HOST = "signalme-125808783895.europe-west2.run.app";
     private static final int REQ_PERMISSIONS = 4242;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -56,10 +56,14 @@ public class MainActivity extends AppCompatActivity {
             decor.setSystemUiVisibility(flags);
         } catch (Throwable ignored) {}
         setContentView(R.layout.activity_main);
+        refreshLayout = findViewById(R.id.refresh);
         webView = findViewById(R.id.webview);
-        // Kill pull-to-refresh / overscroll glow so scrolling never triggers a reload.
-        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        try { webView.setNestedScrollingEnabled(false); } catch (Throwable ignored) {}
+        // Only trigger pull-to-refresh when the WebView is actually at the top,
+        // so normal scrolling never gets hijacked into a reload.
+        refreshLayout.setOnRefreshListener(() -> webView.reload());
+        webView.getViewTreeObserver().addOnScrollChangedListener(() -> {
+            refreshLayout.setEnabled(webView.getScrollY() == 0);
+        });
 
         createNotificationChannel();
         requestRuntimePermissions();
@@ -126,14 +130,15 @@ public class MainActivity extends AppCompatActivity {
             public void onPageStarted(WebView view, String url, Bitmap favicon) { }
             @Override
             public void onPageFinished(WebView view, String url) {
-                // Force a mobile-friendly viewport + prevent horizontal stretch on tablets/foldables.
+                if (refreshLayout != null) refreshLayout.setRefreshing(false);
+                // Force a mobile-friendly viewport; don't block scroll or overscroll.
                 String viewportJs = "(function(){try{"
                     + "var m=document.querySelector('meta[name=viewport]');"
                     + "if(!m){m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);} "
                     + "m.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover');"
                     + "var s=document.getElementById('__git2app_fix');"
                     + "if(!s){s=document.createElement('style');s.id='__git2app_fix';"
-                    + "s.innerHTML='html,body{max-width:100vw!important;overflow-x:hidden!important;overscroll-behavior:none!important;overscroll-behavior-y:none!important;-webkit-text-size-adjust:100%!important;}img,video,iframe,table{max-width:100%!important;height:auto!important;}';"
+                    + "s.innerHTML='html,body{-webkit-text-size-adjust:100%!important;}img,video,iframe{max-width:100%!important;height:auto!important;}';"
                     + "document.head.appendChild(s);} "
                     + "}catch(e){}})();";
                 view.evaluateJavascript(viewportJs, null);
