@@ -1,4 +1,4 @@
-package signalme.pro;
+package app.run.europewest2.signalme125808783895;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;

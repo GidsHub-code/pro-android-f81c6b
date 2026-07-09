@@ -1,4 +1,5 @@
-package signalme.pro;
+package app.run.europewest2.signalme125808783895;
+
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -32,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> fileChooserLauncher;
     private PermissionRequest pendingWebPermissionRequest;
 
-    private static final String START_URL = "https://signalmep2-abaad358.nnadigideon20.workers.dev/";
-    private static final String HOST = "signalmep2-abaad358.nnadigideon20.workers.dev";
+    private static final String START_URL = "https://signalme-125808783895.europe-west2.run.app/";
+    private static final String HOST = "signalme-125808783895.europe-west2.run.app";
     private static final int REQ_PERMISSIONS = 4242;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -69,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
         requestRuntimePermissions();
         registerFileChooser();
 
+
+
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -100,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                 if (fileChooserCallback != null) fileChooserCallback.onReceiveValue(null);
                 fileChooserCallback = filePathCallback;
                 Intent intent = params.createIntent();
+
                 try {
                     fileChooserLauncher.launch(intent);
                     return true;
@@ -108,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
                     return false;
                 }
             }
+
         });
 
         webView.setWebViewClient(new WebViewClient() {
@@ -241,8 +246,12 @@ public class MainActivity extends AppCompatActivity {
             candidates = new String[] {
                 Manifest.permission.CAMERA,
                 Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.READ_MEDIA_IMAGES,
+                Manifest.permission.READ_MEDIA_VIDEO,
+                Manifest.permission.READ_MEDIA_AUDIO,
                 Manifest.permission.POST_NOTIFICATIONS
             };
+
         } else {
             candidates = new String[] {
                 Manifest.permission.CAMERA,
