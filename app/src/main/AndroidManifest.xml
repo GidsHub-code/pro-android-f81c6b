@@ -15,11 +15,7 @@
     <!-- Microphone (voice notes / calls) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-
-    <!-- Photos & media (legacy + scoped Android 13+) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
-   <!-- Photos & media: one-time picks only, handled via the Android Photo Picker.
+    <!-- Photos & media: one-time picks only, handled via the Android Photo Picker.
          Do NOT add READ_MEDIA_IMAGES / READ_MEDIA_VIDEO / READ_MEDIA_AUDIO. -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
